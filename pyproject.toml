@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "damrl"
+version = "0.1.0"
+description = "DamRL: robust reservoir release control with DQN and Double DQN"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+include = ["damrl*"]
