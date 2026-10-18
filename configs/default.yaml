@@ -1,0 +1,63 @@
+# All simulator constants. Units: MCM (million cubic metres) and days.
+# Every value is an assumption, not a measurement of a real river.
+reservoir:
+  capacity: 1000.0
+  dead_storage: 100.0
+  flood_threshold: 850.0
+  max_release: 30.0
+  safe_downstream_flow: 25.0
+  evaporation_rate: 0.0005      # fraction of storage lost per day
+  initial_storage_min: 450.0
+  initial_storage_max: 650.0
+  episode_days: 365
+
+demand:
+  base: 8.0
+  amplitude: 0.25
+  peak_day: 120
+
+inflow:
+  base: 4.0
+  monsoon_amplitude: 26.0
+  monsoon_center: 200
+  monsoon_width: 35.0
+  ar_coefficient: 0.7
+  log_sigma: 0.5
+
+scenarios:
+  drought_factor: 0.6
+  extreme_start_min: 180
+  extreme_start_max: 240
+  extreme_wet_days: 7
+  extreme_wet_multiplier: 1.5
+  extreme_pulse_days: 4
+  extreme_pulse_multiplier: 4.0
+  shifted_monsoon_center: 225
+  shifted_log_sigma: 0.7
+
+actions:
+  release_levels: [0, 5, 10, 15, 20, 25, 30]
+
+forecast:
+  horizon: 3
+  rel_sigma_per_day: 0.15
+
+reward:
+  w_shortage: 1.0
+  w_flood: 1.0
+  w_downstream: 3.0
+  w_clip: 0.5
+  w_power: 0.2
+  demand_ref: 10.0
+
+evaluation:
+  train_seed_start: 0
+  val_seed_start: 10000
+  test_seed_start: 20000
+  val_ordinary: 50
+  val_drought: 20
+  val_extreme: 20
+  test_ordinary: 100
+  test_drought: 50
+  test_extreme: 50
+  test_shifted: 50
