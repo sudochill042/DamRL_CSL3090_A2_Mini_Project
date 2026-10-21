@@ -32,7 +32,15 @@ pytest
 ```
 
 ## Reproduction
-Filled in as experiments are added (training, evaluation, figure commands).
+```
+python scripts/plot_inflow.py                     # sample year of each scenario
+python scripts/rollout_policy.py --policy fixed   # sanity rollout of the environment
+python scripts/tune_rule_curve.py                 # grid-search rule curve on validation seeds
+python scripts/run_baselines.py --split test      # all baselines on the frozen test set
+```
+Baseline results land in `results/baselines_summary_test.csv` and
+`results/figures/baselines_return_test.png`. Training and agent evaluation commands are
+added below as they are implemented.
 
 ## Limitations
 All simulator parameters are assumptions. The inflow is synthetic, the hydropower
@@ -41,8 +49,8 @@ term is a simple proxy, and downstream river hydraulics are not modelled.
 ## Status
 - [x] Project setup
 - [x] Configuration and inflow generator
-- [ ] Reservoir environment
-- [ ] Baselines and evaluation
+- [x] Reservoir environment
+- [x] Baselines and evaluation
 - [ ] DQN and Double DQN
 - [ ] Robustness experiments
 - [ ] Report
