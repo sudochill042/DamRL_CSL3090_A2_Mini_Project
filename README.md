@@ -39,8 +39,18 @@ python scripts/tune_rule_curve.py                 # grid-search rule curve on va
 python scripts/run_baselines.py --split test      # all baselines on the frozen test set
 ```
 Baseline results land in `results/baselines_summary_test.csv` and
-`results/figures/baselines_return_test.png`. Training and agent evaluation commands are
-added below as they are implemented.
+`results/figures/baselines_return_test.png`.
+
+Training and evaluation of the agents:
+```
+python scripts/train_dqn.py --algo dqn  --scenario ordinary --episodes 300 --seed 0
+python scripts/train_dqn.py --algo ddqn --scenario ordinary --episodes 300 --seed 0
+python scripts/plot_learning_curves.py --tags dqn_ordinary ddqn_ordinary
+python scripts/evaluate_agents.py --tags dqn_ordinary ddqn_ordinary --split test
+```
+Flags: `--mask` enables action masking, `--scenario mixed` trains on a 60/20/20 mix of
+ordinary, drought and extreme years, `--no-forecast` removes the inflow forecast from
+the state. Checkpoints go to `models/`, logs to `results/train_*.csv`.
 
 ## Limitations
 All simulator parameters are assumptions. The inflow is synthetic, the hydropower
@@ -51,6 +61,6 @@ term is a simple proxy, and downstream river hydraulics are not modelled.
 - [x] Configuration and inflow generator
 - [x] Reservoir environment
 - [x] Baselines and evaluation
-- [ ] DQN and Double DQN
+- [x] DQN and Double DQN
 - [ ] Robustness experiments
 - [ ] Report
