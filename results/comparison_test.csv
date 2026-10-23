@@ -1,4 +1,9 @@
 method,scenario,return,shortage,shortage_days,spill,flood_days,downstream_days,clipped_days,power
+ddqn_ordinary,all,-36.15,447.28,102.61,37.92,6.72,2.41,1.3,83.52
+ddqn_ordinary,drought,-69.4,785.51,188.09,0.0,0.0,0.0,2.04,50.86
+ddqn_ordinary,extreme,-37.0,323.11,72.84,142.09,17.92,7.81,0.27,100.9
+ddqn_ordinary,ordinary,-17.49,329.26,80.32,5.64,3.12,0.99,0.11,88.81
+ddqn_ordinary,shifted,-39.38,469.27,91.47,36.25,9.43,2.27,3.97,88.22
 dqn_ordinary,all,-37.94,455.95,108.64,40.84,7.64,2.33,2.32,83.95
 dqn_ordinary,drought,-71.69,797.56,202.84,0.0,0.0,0.0,4.15,50.7
 dqn_ordinary,extreme,-40.04,331.11,75.97,155.9,20.99,7.83,0.43,101.4
