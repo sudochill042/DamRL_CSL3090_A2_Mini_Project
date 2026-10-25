@@ -1,6 +1,6 @@
 # DamRL: Robust Reservoir Release Control with DQN and Double DQN
 
-**Team:** Mehul Kale (B24CS1044), Nakshatra Cial (B24CM1090), Harshita Pareek (B24CM1028)  **Course:** AI, Assignment 2 (Real-Life Use Cases of RL)
+**Team:** Nakshatra Cial (B24CM1090), Harshita Pareek (B24CM1028)  **Course:** AI, Assignment 2 (Real-Life Use Cases of RL)
 
 ## Overview
 A reservoir operator must decide every day how much water to release. Releasing too
