@@ -28,7 +28,7 @@
 \maketitle
 
 \section{Problem}
-A reservoir operator decides every day how much water to release downstream. Releasing too little before the monsoon leaves no room for floods; releasing too much leaves shortages in the dry season. We model one year of daily operation of a single reservoir as a Markov decision process and train DQN and Double DQN agents on a synthetic simulator with stochastic inflows. Agents are compared with fixed-release, greedy and seasonal rule-curve baselines, including on drought, extreme-flood and shifted-monsoon years that the agents never saw during training. All simulator constants are assumptions, kept in \texttt{configs/default.yaml}. Units are MCM (million cubic metres) and MCM/day.
+A reservoir operator decides every day how much water to release downstream. Releasing too little before the monsoon leaves no room for floods; releasing too much leaves shortages in the dry season. We model one year of daily operation of a single reservoir as a Markov decision process and train DQN and Double DQN agents on a synthetic simulator with stochastic inflows, an approach motivated by prior work on reinforcement learning for reservoir operation~\cite{wang2020,bertoni2020}. Agents are compared with fixed-release, greedy and seasonal rule-curve baselines, including on drought, extreme-flood and shifted-monsoon years that the agents never saw during training. All simulator constants are assumptions, kept in \texttt{configs/default.yaml}. Units are MCM (million cubic metres) and MCM/day.
 
 \section{State Space}
 The observation at day $t$ is a 10-dimensional vector, all entries scaled to roughly $[0,1]$:
@@ -55,7 +55,7 @@ with shortage, flood-pool, downstream-flow and clipping penalties and a hydropow
 
 \textbf{Baselines.} \emph{Random}; \emph{fixed} release of 10 MCM/day; \emph{greedy}, which releases the level nearest to demand and switches to maximum release once storage enters the flood pool; and a \emph{seasonal rule curve}, the standard operating rule of real reservoirs: a target storage $S^*(t)$ is a cosine between a low and high level, and the release is $D_t+g\,(S_t-S^*(t))/R_{\max}$ rounded to the nearest level. Its four parameters (low 200, high 500, lowest on day 150, gain 1) were grid-searched on the validation set.
 
-\textbf{Algorithm.} DQN with an MLP Q-network ($10\to128\to128\to7$, ReLU), replay buffer of $10^5$ transitions, batch 128, Adam ($5\times10^{-4}$), Huber loss, target network copied every 1000 steps, $\epsilon$ decayed linearly from 1 to 0.05 over the first 60\% of training. Double DQN uses the online network to choose $a'$ and the target network to evaluate it. Each agent is trained for 300 episodes ($\approx1.1\times10^5$ steps, about 15 minutes on CPU) with three seeds; the checkpoint with the best validation return is kept. DQN was chosen because the action space is small and discrete and the problem is a standard episodic MDP, so a value-based method is a natural fit; Double DQN tests whether overestimation matters here.
+\textbf{Algorithm.} DQN, introduced for deep reinforcement learning by Mnih et al.~\cite{mnih2015}, with an MLP Q-network ($10\to128\to128\to7$, ReLU), replay buffer of $10^5$ transitions, batch 128, Adam ($5\times10^{-4}$), Huber loss, target network copied every 1000 steps, $\epsilon$ decayed linearly from 1 to 0.05 over the first 60\% of training. Double DQN uses the online network to choose $a'$ and the target network to evaluate it, following van Hasselt et al.~\cite{vanhasselt2016}. Each agent is trained for 300 episodes ($\approx1.1\times10^5$ steps, about 15 minutes on CPU) with three seeds; the checkpoint with the best validation return is kept. DQN was chosen because the action space is small and discrete and the problem is a standard episodic MDP, so a value-based method is a natural fit; Double DQN tests whether overestimation matters here.
 
 \section{Results}
 \begin{table}[h]
@@ -96,19 +96,19 @@ DQN masked  & $-19.9$ & $-82.3$ & $-37.5$ & $-42.0$\\
 \end{tabular}
 \end{table}
 
-\begin{figure}[h]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\columnwidth]{../results/figures/learning_curves_report.png}
+\includegraphics[width=0.85\textwidth]{../results/figures/learning_curves_report.png}
 \caption{Training return (10-episode moving average) and validation return, mean $\pm$ std over seeds. Dashed line: rule curve on the test set.}
 \label{fig:lc}
-\end{figure}
+\end{figure*}
 
-\begin{figure}[h]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\columnwidth]{../results/figures/trajectory_extreme.png}
+\includegraphics[width=0.85\textwidth]{../results/figures/trajectory_extreme.png}
 \caption{One extreme test year. DQN keeps storage lower through the early monsoon (days 160 to 215) so the reservoir fills later and spills less; both methods spill during the 150 MCM/day pulse. The drawdown after day 300 is a finite-horizon effect: water has no value after day 365.}
 \label{fig:traj}
-\end{figure}
+\end{figure*}
 
 Both agents beat every baseline on every scenario (Tables~\ref{tab:main}, \ref{tab:scen}). Against the tuned rule curve, DQN improves the return by 24\%, cuts flood-pool days from 11.5 to 7.6 and downstream violations from 5.5 to 2.3 days per year, with 14\% less total shortage. The learning curves (Fig.~\ref{fig:lc}) rise past the rule curve after about 150 episodes and the three seeds agree within a few units of return. Double DQN is slightly better than DQN ($-36.2$ vs $-37.9$) but the confidence intervals overlap, so with only seven actions overestimation is not a major issue here. The agents trained only on ordinary years still transfer to drought, extreme and shifted years, mainly because the state includes the storage fraction, season and short forecast, which is enough to react to unusual inflow. Training on the 60/20/20 scenario mix (DQN mixed, 2 seeds) gives the same overall return but improves drought years the most ($-60.9$ vs $-71.7$) at a small cost on ordinary and extreme years, so seeing dry years in training teaches the agent to save water. Action masking (1 seed; releases larger than the water above dead storage are removed from the argmax, using observed storage only) removes clipping entirely and gives the fewest flood days, but the masked agent holds back too much water, has the largest shortage and the lowest return of the agents ($-40.3$), so the clipping penalty alone is a better teacher than a hard mask here. Fig.~\ref{fig:traj} shows the learned behaviour: the agent runs the reservoir close to dead storage before the monsoon and delays filling during the early monsoon, which the rule curve cannot do because it tracks a fixed target, so it has more room when the flood pulse arrives.
 
@@ -116,5 +116,45 @@ Both agents beat every baseline on every scenario (Tables~\ref{tab:main}, \ref{t
 
 \section{Conclusion}
 A DQN agent with a compact state (storage, season, recent and forecast inflow, demand) learns a release policy that outperforms a tuned seasonal rule curve by about 24\% in return and cuts flood-pool days by a third, and it generalises to inflow regimes it never trained on. Double DQN gives a small, not significant, further gain. Limitations: the simulator is synthetic, hydropower is a crude proxy, and the agent cannot avoid spill when a large pulse hits a full reservoir or shortage in a long drought. Even so, the problem is a real one: Indian reservoirs are operated every day on rule curves like our baseline, and monsoon floods and dry-season shortages are the exact trade-off the reward encodes. The simulator is synthetic, but the pipeline is what a real deployment needs: the state, reward and scenario tests carry over unchanged, and the inflow generator can be replaced by historical gauge data for a specific dam. In practice the agent would act as decision support, suggesting a daily release that the operator can accept or override, with the rule curve as a fallback.
+
+\begin{thebibliography}{9}
+\small
+
+\bibitem{wang2020}
+X. Wang et al.,
+``Efficient Reservoir Management through Deep Reinforcement Learning,''
+AI for Earth Sciences Workshop at NeurIPS, 2020.
+Available: \url{https://arxiv.org/abs/2012.03822}.
+
+\bibitem{masoumi2025}
+F. Masoumi, M. Jorabloo, and G. Shobeyri,
+``Optimizing Reservoir Operations with Reinforcement Learning:
+A Data-Driven Framework,''
+\textit{Civil Engineering and Applied Solutions},
+vol. 1, no. 4, pp. 56--67, 2025.
+Available: \href{https://www.magiran.com/paper/2894898/optimizing-reservoir-operations-with-reinforcement-learning-a-data-driven-framework?lang=en}{[Optimizing Reservoir Operations with Reinforcement Learning:
+A Data-Driven Framework]}.
+
+\bibitem{bertoni2020}
+F. Bertoni, M. Giuliani, and A. Castelletti,
+``Integrated Design of Dam Size and Operations via Reinforcement Learning,''
+\textit{Journal of Water Resources Planning and Management},
+vol. 146, no. 4, 2020.
+Available: \url{https://doi.org/10.1061/(ASCE)WR.1943-5452.0001182}.
+
+\bibitem{mnih2015}
+V. Mnih et al.,
+``Human-level control through deep reinforcement learning,''
+\textit{Nature}, vol. 518, pp. 529--533, 2015.
+Available: \url{https://doi.org/10.1038/nature14236}.
+
+\bibitem{vanhasselt2016}
+H. van Hasselt, A. Guez, and D. Silver,
+``Deep Reinforcement Learning with Double Q-Learning,''
+Proceedings of the AAAI Conference on Artificial Intelligence,
+vol. 30, no. 1, 2016.
+Available: \url{https://doi.org/10.1609/aaai.v30i1.10295}.
+
+\end{thebibliography}
 
 \end{document}
