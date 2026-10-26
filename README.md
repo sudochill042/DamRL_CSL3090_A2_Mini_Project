@@ -11,16 +11,6 @@ Double DQN agents. They are compared with fixed-release, greedy, seasonal rule-c
 and stochastic-DP baselines, including on drought, extreme-inflow and shifted-season
 scenarios the agents never trained on.
 
-## Research questions
-1. Does Double DQN outperform DQN on this task?
-2. Does training on mixed (ordinary, drought, flood) years improve robustness?
-3. Does feasible-action masking beat penalty-only constraint handling?
-4. (Stretch) How much does forecast quality matter for RL versus rule-based policies?
-
-## Problem formulation
-See `docs/experiment_plan.md` (state, action, reward and dynamics are filled in as the
-environment is implemented).
-
 ## Repository layout
 ```
 damrl/        simulator, baselines, agents, evaluation code
@@ -30,7 +20,6 @@ tests/        pytest unit tests
 results/      CSV results and figures
 models/       trained agent checkpoints
 report/       two-page report
-docs/         experiment plan
 ```
 
 ## Setup
