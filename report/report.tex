@@ -61,7 +61,7 @@ with shortage, flood-pool, downstream-flow and clipping penalties and a hydropow
 \begin{table}[h]
 \centering\footnotesize
 \setlength{\tabcolsep}{3.5pt}
-\caption{Mean per-episode metrics over 250 test years (agents: mean of seeds). CI is the 95\% interval of the return; Short.\ is total shortage (MCM); Flood and Clip are days per year.}
+\caption{Mean per-episode metrics over 250 test years (agents: mean of seeds). CI is the 95\% interval over the 250 test episodes, seeds averaged per episode first; Short.\ is total shortage (MCM); Flood and Clip are days per year.}
 \label{tab:main}
 \begin{tabular}{lrrrrr}
 \toprule
@@ -71,9 +71,9 @@ Random        & $-196.4\pm4.6$ & 1058 & 172 & 30.1 & 127.9\\
 Fixed 10      & $-143.3\pm4.5$ &  447 & 457 & 70.2 &  82.9\\
 Greedy        & $-102.1\pm3.7$ &  543 &  76 & 30.6 &  61.7\\
 Rule curve    &  $-49.9\pm3.6$ &  531 &  43 & 11.5 &   2.1\\
-DQN           &  $-37.9\pm2.0$ &  456 &  41 &  7.6 &   2.3\\
-Double DQN    &  $-36.2\pm1.9$ &  447 &  38 &  6.7 &   1.3\\
-DQN mixed     &  $-36.5\pm2.2$    & 451 & 43 & 7.7 & 0.1\\
+DQN           &  $-37.9\pm3.4$ &  456 &  41 &  7.6 &   2.3\\
+Double DQN    &  $-36.2\pm3.2$ &  447 &  38 &  6.7 &   1.3\\
+DQN mixed     &  $-36.5\pm3.0$    & 451 & 43 & 7.7 & 0.1\\
 DQN masked    &  $-40.3\pm3.6$     & 506 & 32 & 5.8 & 0.0\\
 \bottomrule
 \end{tabular}
@@ -110,11 +110,11 @@ DQN masked  & $-19.9$ & $-82.3$ & $-37.5$ & $-42.0$\\
 \label{fig:traj}
 \end{figure}
 
-Both agents beat every baseline on every scenario (Tables~\ref{tab:main}, \ref{tab:scen}). Against the tuned rule curve, DQN improves the return by 24\%, cuts flood-pool days from 11.5 to 7.6 and downstream violations from 5.5 to 2.3 days per year, with 14\% less total shortage. The learning curves (Fig.~\ref{fig:lc}) rise past the rule curve after about 150 episodes and the three seeds agree within a few units of return. Double DQN is slightly better than DQN ($-36.2$ vs $-37.9$) but the confidence intervals overlap, so with only seven actions overestimation is not a major issue here. The agents trained only on ordinary years still transfer to drought, extreme and shifted years, mainly because the state includes the storage fraction, season and short forecast, which is enough to react to unusual inflow. Training on the 60/20/20 scenario mix (DQN mixed, 2 seeds) gives the same overall return but improves drought years the most ($-60.9$ vs $-71.7$) at a small cost on ordinary and extreme years, so seeing dry years in training teaches the agent to save water. Action masking (1 seed) removes clipping entirely and gives the fewest flood days, but the masked agent holds back too much water, has the largest shortage and the lowest return of the agents ($-40.3$), so the clipping penalty alone is a better teacher than a hard mask here. Fig.~\ref{fig:traj} shows the learned behaviour: the agent runs the reservoir close to dead storage before the monsoon and delays filling during the early monsoon, which the rule curve cannot do because it tracks a fixed target, so it has more room when the flood pulse arrives.
+Both agents beat every baseline on every scenario (Tables~\ref{tab:main}, \ref{tab:scen}). Against the tuned rule curve, DQN improves the return by 24\%, cuts flood-pool days from 11.5 to 7.6 and downstream violations from 5.5 to 2.3 days per year, with 14\% less total shortage. The learning curves (Fig.~\ref{fig:lc}) rise past the rule curve after about 150 episodes and the three seeds agree within a few units of return. Double DQN is slightly better than DQN ($-36.2$ vs $-37.9$) but the confidence intervals overlap, so with only seven actions overestimation is not a major issue here. The agents trained only on ordinary years still transfer to drought, extreme and shifted years, mainly because the state includes the storage fraction, season and short forecast, which is enough to react to unusual inflow. Training on the 60/20/20 scenario mix (DQN mixed, 2 seeds) gives the same overall return but improves drought years the most ($-60.9$ vs $-71.7$) at a small cost on ordinary and extreme years, so seeing dry years in training teaches the agent to save water. Action masking (1 seed; releases larger than the water above dead storage are removed from the argmax, using observed storage only) removes clipping entirely and gives the fewest flood days, but the masked agent holds back too much water, has the largest shortage and the lowest return of the agents ($-40.3$), so the clipping penalty alone is a better teacher than a hard mask here. Fig.~\ref{fig:traj} shows the learned behaviour: the agent runs the reservoir close to dead storage before the monsoon and delays filling during the early monsoon, which the rule curve cannot do because it tracks a fixed target, so it has more room when the flood pulse arrives.
 
 \textbf{Failure cases.} Four of the five worst DQN test episodes are extreme years with 470 to 910 MCM of spill and 35 to 57 flood-pool days: the flood pulse (over 100 MCM/day for several days) arrives when storage is already high, and the 30 MCM/day outlet cannot drain the reservoir fast enough, so spill is physically unavoidable and every method suffers. The fifth is a drought year in which the agent reaches dead storage and records 241 shortage days. The hydropower term rewards release, so the agent has little reason to save water for a drought it is not told is coming.
 
 \section{Conclusion}
-A DQN agent with a compact state (storage, season, recent and forecast inflow, demand) learns a release policy that outperforms a tuned seasonal rule curve by about 25\% in return and halves flood-pool days, and it generalises to inflow regimes it never trained on. Double DQN gives a small, not significant, further gain. Limitations: the simulator is synthetic, hydropower is a crude proxy, and the agent cannot avoid spill when a large pulse hits a full reservoir or shortage in a long drought. Natural next steps are a longer-horizon forecast, a multi-reservoir cascade and a constrained-RL formulation with hard flood limits.
+A DQN agent with a compact state (storage, season, recent and forecast inflow, demand) learns a release policy that outperforms a tuned seasonal rule curve by about 24\% in return and cuts flood-pool days by a third, and it generalises to inflow regimes it never trained on. Double DQN gives a small, not significant, further gain. Limitations: the simulator is synthetic, hydropower is a crude proxy, and the agent cannot avoid spill when a large pulse hits a full reservoir or shortage in a long drought. Even so, the problem is a real one: Indian reservoirs are operated every day on rule curves like our baseline, and monsoon floods and dry-season shortages are the exact trade-off the reward encodes. The simulator is synthetic, but the pipeline is what a real deployment needs: the state, reward and scenario tests carry over unchanged, and the inflow generator can be replaced by historical gauge data for a specific dam. In practice the agent would act as decision support, suggesting a daily release that the operator can accept or override, with the rule curve as a fallback.
 
 \end{document}

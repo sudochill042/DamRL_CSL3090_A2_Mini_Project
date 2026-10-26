@@ -60,6 +60,7 @@ def evaluate(env: ReservoirEnv, policy, episodes: Sequence[Episode]) -> pd.DataF
     """One row per episode, columns = METRICS + scenario + method."""
     rows = [run_episode(env, policy, ep) for ep in episodes]
     df = pd.DataFrame(rows)
+    df["episode_id"] = range(len(rows))
     df["method"] = getattr(policy, "name", type(policy).__name__)
     return df
 
@@ -75,8 +76,20 @@ def summarise(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def mean_return_ci(df: pd.DataFrame) -> pd.DataFrame:
-    """Mean return per method with a 95% confidence interval over episodes."""
-    g = df.groupby("method")["return"]
+    """Mean return per method with a 95% confidence interval over test episodes.
+
+    When a method has several seeds, the seeds are averaged per episode first, so the
+    interval is over the (independent) episodes and not inflated by repeated episodes.
+    """
+    df = df.copy()
+    if "episode_id" not in df:
+        df["episode_id"] = np.nan
+    missing = df["episode_id"].isna()      # rows from older CSVs: one row per episode
+    df.loc[missing, "episode_id"] = df[missing].groupby("method").cumcount()
+    per_episode = df.groupby(["method", "episode_id"])["return"].mean().reset_index(level=0)
+    g = per_episode.groupby("method")["return"]
     out = pd.DataFrame({"mean": g.mean(), "std": g.std(), "n": g.count()})
     out["ci95"] = 1.96 * out["std"] / np.sqrt(out["n"])
+    if "seed" in df:
+        out["n_seeds"] = df.groupby("method")["seed"].nunique().reindex(out.index).clip(lower=1).astype(int)
     return out.round(2)
